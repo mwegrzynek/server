@@ -255,7 +255,10 @@ class UserPluginTest extends TestCase {
 					['label' => 'Test One', 'value' => ['shareType' => Share::SHARE_TYPE_USER, 'shareWith' => 'test1']],
 				],
 				true,
-				false,
+				[
+					['test', null],
+					['test1', $this->getUserMock('test1', 'Test One')],
+				],
 			],
 			[
 				'test',
@@ -269,7 +272,10 @@ class UserPluginTest extends TestCase {
 				[],
 				[],
 				true,
-				false,
+				[
+					['test', null],
+					['test1', $this->getUserMock('test1', 'Test One')],
+				],
 			],
 			[
 				'test',
@@ -292,7 +298,13 @@ class UserPluginTest extends TestCase {
 					['label' => 'Test Two', 'value' => ['shareType' => Share::SHARE_TYPE_USER, 'shareWith' => 'test2']],
 				],
 				false,
-				false,
+				[
+					['test', null],
+					['test1', $this->getUserMock('test1', 'Test One')],
+					['test2', $this->getUserMock('test2', 'Test Two')],
+					['test1', $this->getUserMock('test1', 'Test One')],
+					['test2', $this->getUserMock('test2', 'Test Two')],
+				],
 			],
 			[
 				'test',
@@ -312,7 +324,13 @@ class UserPluginTest extends TestCase {
 				[],
 				[],
 				true,
-				false,
+				[
+					['test', null],
+					['test1', $this->getUserMock('test1', 'Test One')],
+					['test2', $this->getUserMock('test2', 'Test Two')],
+					['test1', $this->getUserMock('test1', 'Test One')],
+					['test2', $this->getUserMock('test2', 'Test Two')],
+				],
 			],
 			[
 				'test',
@@ -334,7 +352,10 @@ class UserPluginTest extends TestCase {
 					['label' => 'Test Two', 'value' => ['shareType' => Share::SHARE_TYPE_USER, 'shareWith' => 'test2']],
 				],
 				false,
-				false,
+				[
+					['test', $this->getUserMock('test', 'Test One')],
+					['test2', $this->getUserMock('test2', 'Test Two')],
+				],
 			],
 			[
 				'test',
@@ -354,7 +375,10 @@ class UserPluginTest extends TestCase {
 				],
 				[],
 				true,
-				false,
+				[
+					['test', $this->getUserMock('test', 'Test One')],
+					['test2', $this->getUserMock('test2', 'Test Two')],
+				],
 			],
 		];
 	}
@@ -370,7 +394,7 @@ class UserPluginTest extends TestCase {
 	 * @param array $exactExpected
 	 * @param array $expected
 	 * @param bool $reachedEnd
-	 * @param bool|IUser $singleUser
+	 * @param array|bool $users
 	 */
 	public function testSearch(
 		$searchTerm,
@@ -381,7 +405,7 @@ class UserPluginTest extends TestCase {
 		array $exactExpected,
 		array $expected,
 		$reachedEnd,
-		$singleUser
+		$users
 	) {
 		$this->config->expects($this->any())
 			->method('getAppValue')
@@ -391,7 +415,8 @@ class UserPluginTest extends TestCase {
 				{
 					if ($appName === 'core' && $key === 'shareapi_only_share_with_group_members') {
 						return $shareWithGroupOnly ? 'yes' : 'no';
-					} else if ($appName === 'core' && $key === 'shareapi_allow_share_dialog_user_enumeration') {
+					}
+					if ($appName === 'core' && $key === 'shareapi_allow_share_dialog_user_enumeration') {
 						return $shareeEnumeration ? 'yes' : 'no';
 					}
 					return $default;
@@ -410,12 +435,12 @@ class UserPluginTest extends TestCase {
 				->with($searchTerm, $this->limit, $this->offset)
 				->willReturn($userResponse);
 		} else {
-			if ($singleUser !== false) {
+			if ($users instanceof IUser) {
 				$this->groupManager->expects($this->exactly(2))
 					->method('getUserGroupIds')
 					->withConsecutive(
 						[$this->user],
-						[$singleUser]
+						[$users]
 					)
 					->willReturn($groupResponse);
 			} else {
@@ -431,11 +456,17 @@ class UserPluginTest extends TestCase {
 				->willReturnMap($userResponse);
 		}
 
-		if ($singleUser !== false) {
-			$this->userManager->expects($this->once())
-				->method('get')
-				->with($searchTerm)
-				->willReturn($singleUser);
+		if ($users !== false) {
+			if ($users instanceof IUser) {
+				$this->userManager->expects($this->once())
+					->method('get')
+					->with($searchTerm)
+					->willReturn($users);
+			} else {
+				$this->userManager->expects($this->exactly(count($users)))
+					->method('get')
+					->willReturnMap($users);
+			}
 		}
 
 

@@ -71,7 +71,7 @@ class UserPlugin implements ISearchPlugin {
 			foreach ($userGroups as $userGroup) {
 				$usersTmp = $this->groupManager->displayNamesInGroup($userGroup, $search, $limit, $offset);
 				foreach ($usersTmp as $uid => $userDisplayName) {
-					$users[(string) $uid] = $userDisplayName;
+					$users[(string) $uid] = $this->userManager->get($uid);
 				}
 			}
 		} else {
@@ -79,8 +79,9 @@ class UserPlugin implements ISearchPlugin {
 			$usersTmp = $this->userManager->searchDisplayName($search, $limit, $offset);
 
 			foreach ($usersTmp as $user) {
-				if ($user->isEnabled()) { // Don't keep deactivated users
-					$users[(string) $user->getUID()] = $user->getDisplayName();
+				if ($user->isEnabled()) {
+					// Don't keep deactivated users
+					$users[(string) $user->getUID()] = $user;
 				}
 			}
 		}
@@ -93,12 +94,19 @@ class UserPlugin implements ISearchPlugin {
 
 		$foundUserById = false;
 		$lowerSearch = strtolower($search);
-		foreach ($users as $uid => $userDisplayName) {
+		foreach ($users as $uid => $user) {
 			$uid = (string) $uid;
-			if (strtolower($uid) === $lowerSearch || strtolower($userDisplayName) === $lowerSearch) {
+			$userDisplayName = $user->getDisplayName();
+			$userEmail = $user->getEMailAddress();
+			if (
+				strtolower($uid) === $lowerSearch ||
+				strtolower($userDisplayName) === $lowerSearch ||
+				strtolower($userEmail) === $lowerSearch
+			) {
 				if (strtolower($uid) === $lowerSearch) {
 					$foundUserById = true;
 				}
+
 				$result['exact'][] = [
 					'label' => $userDisplayName,
 					'value' => [
@@ -148,6 +156,9 @@ class UserPlugin implements ISearchPlugin {
 
 		$type = new SearchResultType('users');
 		$searchResult->addResultSet($type, $result['wide'], $result['exact']);
+		if (!empty($result['exact'])) {
+			$searchResult->markExactIdMatch($type);
+		}
 
 		return $hasMoreResults;
 	}
