@@ -26,9 +26,10 @@
 			<div id="headerAvatar" class="avatar" />
 			<div id="headerName" class="name">
 				{{ t('settings', 'Username') }}
-			</div>
-			<div id="headerDisplayName" class="displayName">
-				{{ t('settings', 'Display name') }}
+
+				<div class="subtitle">
+					{{ t('settings', 'Display name') }}
+				</div>
 			</div>
 			<div id="headerPassword" class="password">
 				{{ t('settings', 'Password') }}
@@ -52,18 +53,22 @@
 				class="languages">
 				{{ t('settings', 'Language') }}
 			</div>
-			<div v-if="showConfig.showStoragePath"
-				class="headerStorageLocation storageLocation">
-				{{ t('settings', 'Storage location') }}
-			</div>
-			<div v-if="showConfig.showUserBackend"
+
+			<div v-if="showConfig.showUserBackend || showConfig.showStoragePath"
 				class="headerUserBackend userBackend">
-				{{ t('settings', 'User backend') }}
+				<div v-if="showConfig.showUserBackend" class="userBackend">
+					{{ t('settings', 'User backend') }}
+				</div>
+				<div v-if="showConfig.showStoragePath"
+					class="subtitle storageLocation">
+					{{ t('settings', 'Storage location') }}
+				</div>
 			</div>
 			<div v-if="showConfig.showLastLogin"
 				class="headerLastLogin lastLogin">
 				{{ t('settings', 'Last login') }}
 			</div>
+
 			<div class="userActions" />
 		</div>
 
@@ -377,9 +382,9 @@ export default {
 			// deleting the last user, reset the list
 			if (val === 0 && old === 1) {
 				this.$refs.infiniteLoading.stateChanger.reset()
-			// adding the first user, warn the infiniteLoader that
-			// the list is not empty anymore (we don't fetch the newly
-			// added user as we already have all the info we need)
+				// adding the first user, warn the infiniteLoader that
+				// the list is not empty anymore (we don't fetch the newly
+				// added user as we already have all the info we need)
 			} else if (val === 1 && old === 0) {
 				this.$refs.infiniteLoading.stateChanger.loaded()
 			}
@@ -391,18 +396,18 @@ export default {
 		}
 
 		/**
-		 * Reset and init new user form
-		 */
+			 * Reset and init new user form
+			 */
 		this.resetForm()
 
 		/**
-		 * Register search
-		 */
+			 * Register search
+			 */
 		this.userSearch = new OCA.Search(this.search, this.resetSearch)
 
 		/**
-		 * If disabled group but empty, redirect
-		 */
+			 * If disabled group but empty, redirect
+			 */
 		this.redirectIfDisabled()
 	},
 	methods: {
@@ -411,11 +416,11 @@ export default {
 		},
 
 		/**
-		 * Validate quota string to make sure it's a valid human file size
-		 *
-		 * @param {string} quota Quota in readable format '5 GB'
-		 * @returns {Object}
-		 */
+			 * Validate quota string to make sure it's a valid human file size
+			 *
+			 * @param {string} quota Quota in readable format '5 GB'
+			 * @returns {Object}
+			 */
 		validateQuota(quota) {
 			// only used for new presets sent through @Tag
 			let validQuota = OC.Util.computerFileSize(quota)
@@ -455,18 +460,18 @@ export default {
 			this.newUser = Object.assign({}, newUser)
 
 			/**
-			 * Init default language from server data. The use of this.settings
-			 * requires a computed variable, which break the v-model binding of the form,
-			 * this is a much easier solution than getter and setter on a computed var
-			 */
+				 * Init default language from server data. The use of this.settings
+				 * requires a computed variable, which break the v-model binding of the form,
+				 * this is a much easier solution than getter and setter on a computed var
+				 */
 			if (this.settings.defaultLanguage) {
 				Vue.set(this.newUser.language, 'code', this.settings.defaultLanguage)
 			}
 
 			/**
-			 * In case the user directly loaded the user list within a group
-			 * the watch won't be triggered. We need to initialize it.
-			 */
+				 * In case the user directly loaded the user list within a group
+				 * the watch won't be triggered. We need to initialize it.
+				 */
 			this.setNewUserDefaultGroup(this.selectedGroup)
 
 			this.loading.all = false
@@ -492,10 +497,10 @@ export default {
 					if (error.response && error.response.data && error.response.data.ocs && error.response.data.ocs.meta) {
 						const statuscode = error.response.data.ocs.meta.statuscode
 						if (statuscode === 102) {
-						// wrong username
+							// wrong username
 							this.$refs.newusername.focus()
 						} else if (statuscode === 107) {
-						// wrong password
+							// wrong password
 							this.$refs.newuserpassword.focus()
 						}
 					}
@@ -515,11 +520,11 @@ export default {
 		},
 
 		/**
-		 * Create a new group
-		 *
-		 * @param {string} gid Group id
-		 * @returns {Promise}
-		 */
+			 * Create a new group
+			 *
+			 * @param {string} gid Group id
+			 * @returns {Promise}
+			 */
 		createGroup(gid) {
 			this.loading.groups = true
 			this.$store.dispatch('addGroup', gid)
@@ -534,15 +539,15 @@ export default {
 		},
 
 		/**
-		 * If the selected group is the disabled group but the count is 0
-		 * redirect to the all users page.
-		 * * we only check for 0 because we don't have the count on ldap
-		 * * and we therefore set the usercount to -1 in this specific case
-		 */
+			 * If the selected group is the disabled group but the count is 0
+			 * redirect to the all users page.
+			 * * we only check for 0 because we don't have the count on ldap
+			 * * and we therefore set the usercount to -1 in this specific case
+			 */
 		redirectIfDisabled() {
 			const allGroups = this.$store.getters.getGroups
 			if (this.selectedGroup === 'disabled'
-				&& allGroups.findIndex(group => group.id === 'disabled' && group.usercount === 0) > -1) {
+					&& allGroups.findIndex(group => group.id === 'disabled' && group.usercount === 0) > -1) {
 				// disabled group is empty, redirection to all users
 				this.$router.push({ name: 'users' })
 				this.$refs.infiniteLoading.stateChanger.reset()

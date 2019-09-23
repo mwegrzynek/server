@@ -42,6 +42,21 @@
 	</div>
 
 	<!-- User full data -->
+	<UserRowSimple
+		v-else-if="!editing"
+		:generate-avatar="generateAvatar"
+		:loading="loading"
+		:show-config="showConfig"
+		:languages="languages"
+		:user="user"
+		:user-actions="userActions"
+		:opened-menu="openedMenu"
+		:feedback-message="feedbackMessage"
+		:sub-admins-groups="subAdminsGroups"
+		:settings="settings"
+		@hideMenu="hideMenu"
+		@toggleMenu="toggleMenu"
+		@edit="editing = true" />
 	<div v-else
 		class="row"
 		:class="{'disabled': loading.delete || loading.disable}"
@@ -55,30 +70,30 @@
 				:srcset="generateAvatar(user.id, 64)+' 2x, '+generateAvatar(user.id, 128)+' 4x'">
 		</div>
 		<!-- dirty hack to ellipsis on two lines -->
-		<div class="name">
-			{{ user.id }}
+		<div class="displayName">
+			<form
+				class="displayName"
+				:class="{'icon-loading-small': loading.displayName}"
+				@submit.prevent="updateDisplayName">
+				<template v-if="user.backendCapabilities.setDisplayName">
+					<input v-if="user.backendCapabilities.setDisplayName"
+						:id="'displayName'+user.id+rand"
+						ref="displayName"
+						type="text"
+						:disabled="loading.displayName||loading.all"
+						:value="user.displayname"
+						autocomplete="new-password"
+						autocorrect="off"
+						autocapitalize="off"
+						spellcheck="false">
+					<input v-if="user.backendCapabilities.setDisplayName"
+						type="submit"
+						class="icon-confirm"
+						value="">
+				</template>
+				<div v-else v-tooltip.auto="t('settings', 'The backend does not support changing the display name')" class="name" />
+			</form>
 		</div>
-		<form class="displayName" :class="{'icon-loading-small': loading.displayName}" @submit.prevent="updateDisplayName">
-			<template v-if="user.backendCapabilities.setDisplayName">
-				<input v-if="user.backendCapabilities.setDisplayName"
-					:id="'displayName'+user.id+rand"
-					ref="displayName"
-					type="text"
-					:disabled="loading.displayName||loading.all"
-					:value="user.displayname"
-					autocomplete="new-password"
-					autocorrect="off"
-					autocapitalize="off"
-					spellcheck="false">
-				<input v-if="user.backendCapabilities.setDisplayName"
-					type="submit"
-					class="icon-confirm"
-					value="">
-			</template>
-			<div v-else v-tooltip.auto="t('settings', 'The backend does not support changing the display name')" class="name">
-				{{ user.displayname }}
-			</div>
-		</form>
 		<form v-if="settings.canChangePassword && user.backendCapabilities.setPassword"
 			class="password"
 			:class="{'icon-loading-small': loading.password}"
@@ -87,7 +102,7 @@
 				ref="password"
 				type="password"
 				required
-				:disabled="loading.password||loading.all"
+				:disabled="loading.password || loading.all"
 				:minlength="minPasswordLength"
 				value=""
 				:placeholder="t('settings', 'New password')"
@@ -127,7 +142,6 @@
 				@tag="createGroup"
 				@select="addUserGroup"
 				@remove="removeUserGroup">
-				<span slot="limit" v-tooltip.auto="formatGroupsTitle(userGroups)" class="multiselect__limit">+{{ userGroups.length-2 }}</span>
 				<span slot="noResult">{{ t('settings', 'No results') }}</span>
 			</Multiselect>
 		</div>
@@ -145,7 +159,6 @@
 				:tag-width="60"
 				@select="addUserSubAdmin"
 				@remove="removeUserSubAdmin">
-				<span slot="limit" v-tooltip.auto="formatGroupsTitle(userSubAdminsGroups)" class="multiselect__limit">+{{ userSubAdminsGroups.length-2 }}</span>
 				<span slot="noResult">{{ t('settings', 'No results') }}</span>
 			</Multiselect>
 		</div>
@@ -162,10 +175,6 @@
 				:taggable="true"
 				@tag="validateQuota"
 				@input="setUserQuota" />
-			<progress class="quota-user-progress"
-				:class="{'warn':usedQuota>80}"
-				:value="usedQuota"
-				max="100" />
 		</div>
 		<div v-if="showConfig.showLanguages"
 			class="languages"
@@ -182,17 +191,18 @@
 				group-label="label"
 				@input="setUserLanguage" />
 		</div>
-		<div v-if="showConfig.showStoragePath" class="storageLocation">
-			{{ user.storageLocation }}
-		</div>
-		<div v-if="showConfig.showUserBackend" class="userBackend">
-			{{ user.backend }}
-		</div>
-		<div v-if="showConfig.showLastLogin" v-tooltip.auto="user.lastLogin>0 ? OC.Util.formatDate(user.lastLogin) : ''" class="lastLogin">
-			{{ user.lastLogin>0 ? OC.Util.relativeModifiedDate(user.lastLogin) : t('settings','Never') }}
-		</div>
+
+		<!-- don't show this on edit mode -->
+		<div v-if="showConfig.showStoragePath || showConfig.showUserBackend" class="storageLocation" />
+		<div v-if="showConfig.showLastLogin" />
+
 		<div class="userActions">
 			<div v-if="OC.currentUser !== user.id && user.id !== 'admin' && !loading.all" class="toggleUserActions">
+				<Actions>
+					<ActionButton icon="icon-checkmark" @click="editing = false">
+						{{ t('settings', 'Done') }}
+					</ActionButton>
+				</Actions>
 				<div v-click-outside="hideMenu" class="icon-more" @click="toggleMenu" />
 				<div class="popovermenu" :class="{ 'open': openedMenu }">
 					<PopoverMenu :menu="userActions" />
@@ -210,19 +220,25 @@
 import ClickOutside from 'vue-click-outside'
 import Vue from 'vue'
 import VTooltip from 'v-tooltip'
-import { PopoverMenu, Multiselect } from 'nextcloud-vue'
+import { PopoverMenu, Multiselect, Actions, ActionButton } from 'nextcloud-vue'
+import UserRowSimple from './UserRowSimple'
+import UserRowMixin from '../../mixins/UserRowMixin'
 
 Vue.use(VTooltip)
 
 export default {
 	name: 'UserRow',
 	components: {
+		UserRowSimple,
 		PopoverMenu,
+		Actions,
+		ActionButton,
 		Multiselect
 	},
 	directives: {
 		ClickOutside
 	},
+	mixins: [UserRowMixin],
 	props: {
 		user: {
 			type: Object,
@@ -262,6 +278,7 @@ export default {
 			rand: parseInt(Math.random() * 1000),
 			openedMenu: false,
 			feedbackMessage: '',
+			editing: false,
 			loading: {
 				all: false,
 				displayName: false,
@@ -305,92 +322,9 @@ export default {
 				})
 			}
 			return actions.concat(this.externalActions)
-		},
-
-		/* GROUPS MANAGEMENT */
-		userGroups() {
-			let userGroups = this.groups.filter(group => this.user.groups.includes(group.id))
-			return userGroups
-		},
-		userSubAdminsGroups() {
-			let userSubAdminsGroups = this.subAdminsGroups.filter(group => this.user.subadmin.includes(group.id))
-			return userSubAdminsGroups
-		},
-		availableGroups() {
-			return this.groups.map((group) => {
-				// clone object because we don't want
-				// to edit the original groups
-				let groupClone = Object.assign({}, group)
-
-				// two settings here:
-				// 1. user NOT in group but no permission to add
-				// 2. user is in group but no permission to remove
-				groupClone.$isDisabled
-					= (group.canAdd === false
-						&& !this.user.groups.includes(group.id))
-					|| (group.canRemove === false
-						&& this.user.groups.includes(group.id))
-				return groupClone
-			})
-		},
-
-		/* QUOTA MANAGEMENT */
-		usedSpace() {
-			if (this.user.quota.used) {
-				return t('settings', '{size} used', { size: OC.Util.humanFileSize(this.user.quota.used) })
-			}
-			return t('settings', '{size} used', { size: OC.Util.humanFileSize(0) })
-		},
-		usedQuota() {
-			let quota = this.user.quota.quota
-			if (quota > 0) {
-				quota = Math.min(100, Math.round(this.user.quota.used / quota * 100))
-			} else {
-				var usedInGB = this.user.quota.used / (10 * Math.pow(2, 30))
-				// asymptotic curve approaching 50% at 10GB to visualize used stace with infinite quota
-				quota = 95 * (1 - (1 / (usedInGB + 1)))
-			}
-			return isNaN(quota) ? 0 : quota
-		},
-		// Mapping saved values to objects
-		userQuota() {
-			if (this.user.quota.quota >= 0) {
-				// if value is valid, let's map the quotaOptions or return custom quota
-				let humanQuota = OC.Util.humanFileSize(this.user.quota.quota)
-				let userQuota = this.quotaOptions.find(quota => quota.id === humanQuota)
-				return userQuota || { id: humanQuota, label: humanQuota }
-			} else if (this.user.quota.quota === 'default') {
-				// default quota is replaced by the proper value on load
-				return this.quotaOptions[0]
-			}
-			return this.quotaOptions[1] // unlimited
-		},
-
-		/* PASSWORD POLICY? */
-		minPasswordLength() {
-			return this.$store.getters.getPasswordPolicyMinLength
-		},
-
-		/* LANGUAGE */
-		userLanguage() {
-			let availableLanguages = this.languages[0].languages.concat(this.languages[1].languages)
-			let userLang = availableLanguages.find(lang => lang.code === this.user.language)
-			if (typeof userLang !== 'object' && this.user.language !== '') {
-				return {
-					code: this.user.language,
-					name: this.user.language
-				}
-			} else if (this.user.language === '') {
-				return false
-			}
-			return userLang
 		}
 	},
-	mounted() {
-		// required if popup needs to stay opened after menu click
-		// since we only have disable/delete actions, let's close it directly
-		// this.popupItem = this.$el;
-	},
+
 	methods: {
 		/* MENU HANDLING */
 		toggleMenu() {
@@ -398,35 +332,6 @@ export default {
 		},
 		hideMenu() {
 			this.openedMenu = false
-		},
-
-		/**
-		 * Generate avatar url
-		 *
-		 * @param {string} user The user name
-		 * @param {int} size Size integer, default 32
-		 * @returns {string}
-		 */
-		generateAvatar(user, size = 32) {
-			return OC.generateUrl(
-				'/avatar/{user}/{size}?v={version}',
-				{
-					user: user,
-					size: size,
-					version: oc_userconfig.avatar.version
-				}
-			)
-		},
-
-		/**
-		 * Format array of groups objects to a string for the popup
-		 *
-		 * @param {array} groups The groups
-		 * @returns {string}
-		 */
-		formatGroupsTitle(groups) {
-			let names = groups.map(group => group.name)
-			return names.slice(2).join(', ')
 		},
 
 		wipeUserDevices() {
@@ -551,7 +456,7 @@ export default {
 		 * Create a new group and add user to it
 		 *
 		 * @param {string} gid Group id
-		 */
+		*/
 		async createGroup(gid) {
 			this.loading = { groups: true, subadmins: true }
 			try {
