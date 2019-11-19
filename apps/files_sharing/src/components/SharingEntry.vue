@@ -48,6 +48,15 @@
 					{{ t('files_sharing', 'Can create') }}
 				</ActionCheckbox>
 
+				<!-- create permission -->
+				<ActionCheckbox
+					ref="canCreate"
+					:checked.sync="canCreate"
+					:value="permissionsCreate"
+					:disabled="saving">
+					{{ t('files_sharing', 'Can create') }}
+				</ActionCheckbox>
+
 				<!-- reshare permission -->
 				<ActionCheckbox
 					ref="canReshare"
@@ -55,6 +64,15 @@
 					:value="permissionsShare"
 					:disabled="saving">
 					{{ t('files_sharing', 'Can reshare') }}
+				</ActionCheckbox>
+
+				<!-- delete permission -->
+				<ActionCheckbox
+					ref="canDelete"
+					:checked.sync="canDelete"
+					:value="permissionsShare"
+					:disabled="saving">
+					{{ t('files_sharing', 'Can delete') }}
 				</ActionCheckbox>
 
 				<!-- delete permission -->
@@ -279,7 +297,7 @@ export default {
 	},
 
 	methods: {
-		updatePermissions({ isEditChecked = this.canEdit, isCreateChecked = this.canCreate, isDeleteChecked = this.canDelete, isReshareChecked = this.canReshare } = {}) {
+		updatePermissions({ isEditChecked = this.canEdit, isCreateChecked = this.canCreate, isDeleteChecked = this.canDelete, isCreateChecked, isDeleteChecked, isReshareChecked = this.canReshare } = {}) {
 			// calc permissions if checked
 			const permissions = this.permissionsRead
 				| (isCreateChecked ? this.permissionsCreate : 0)
