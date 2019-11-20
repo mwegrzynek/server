@@ -433,6 +433,7 @@ export default class Share {
 	get canEdit() {
 		return this.#share.can_edit === true
 	}
+
 	/**
 	 * Can the current user CREATE this share ?
 	 *

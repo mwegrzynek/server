@@ -29,17 +29,16 @@
 		<div v-tooltip.auto="tooltip" class="sharing-entry__desc">
 			<h5>{{ title }}</h5>
 		</div>
+		<!-- edit permission -->
+		<ActionCheckbox
+			ref="canEdit"
+			:checked.sync="canEdit"
+			:value="permissionsEdit"
+			:disabled="saving">
+			{{ t('files_sharing', 'Can edit') }}
+		</ActionCheckbox>
 		<Actions menu-align="right" class="sharing-entry__actions">
 			<template v-if="share.canEdit">
-				<!-- edit permission -->
-				<ActionCheckbox
-					ref="canEdit"
-					:checked.sync="canEdit"
-					:value="permissionsEdit"
-					:disabled="saving">
-					{{ t('files_sharing', 'Allow editing') }}
-				</ActionCheckbox>
-
 				<!-- create permission -->
 				<ActionCheckbox
 					ref="canCreate"
@@ -228,7 +227,7 @@ export default {
 				return this.share.hasUpdatePermission
 			},
 			set: function(checked) {
-				this.updatePermissions(this.canCreate, checked)
+				this.updatePermissions(checked, this.canCreate)
 			}
 		},
 		/**
@@ -239,7 +238,7 @@ export default {
 				return this.share.hasUpdatePermission
 			},
 			set: function(checked) {
-				this.updatePermissions(this.canDelete, checked)
+				this.updatePermissions(checked, this.canDelete)
 			}
 		},
 
@@ -280,7 +279,7 @@ export default {
 	},
 
 	methods: {
-		updatePermissions(isEditChecked, isCreateChecked, isDeleteChecked, isReshareChecked) {
+		updatePermissions({ isEditChecked = this.canEdit, isCreateChecked = this.canCreate, isDeleteChecked = this.canDelete, isReshareChecked = this.canReshare } = {}) {
 			// calc permissions if checked
 			const permissions = this.permissionsRead
 				| (isCreateChecked ? this.permissionsCreate : 0)
@@ -290,9 +289,9 @@ export default {
 
 			this.share.permissions = permissions
 			this.queueUpdate('permissions')
+
 		}
 	}
-
 }
 </script>
 
