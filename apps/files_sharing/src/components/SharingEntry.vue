@@ -234,7 +234,7 @@ export default {
 				return this.share.hasUpdatePermission
 			},
 			set: function(checked) {
-				this.updatePermissions(checked, this.canReshare)
+				this.updatePermissions({ isEditChecked: checked })
 			}
 		},
 		/**
@@ -245,7 +245,7 @@ export default {
 				return this.share.hasUpdatePermission
 			},
 			set: function(checked) {
-				this.updatePermissions(checked, this.canCreate)
+				this.updatePermissions({ isCreateChecked: checked })
 			}
 		},
 		/**
@@ -256,7 +256,7 @@ export default {
 				return this.share.hasUpdatePermission
 			},
 			set: function(checked) {
-				this.updatePermissions(checked, this.canDelete)
+				this.updatePermissions({ isDeleteChecked: checked })
 			}
 		},
 
@@ -268,7 +268,7 @@ export default {
 				return this.share.hasSharePermission
 			},
 			set: function(checked) {
-				this.updatePermissions(this.canEdit, checked)
+				this.updatePermissions({ isReshareChecked: checked })
 			}
 		},
 
