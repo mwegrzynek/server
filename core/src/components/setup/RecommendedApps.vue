@@ -21,21 +21,24 @@
 
 <template>
 	<div class="update">
-		<h1>{{ t('core', 'Recommended apps') }}</h1>
+		<h2>{{ t('core', 'Recommended apps') }}</h2>
 		<div v-if="loadingApps" class="loading">
 			{{ t('core', 'Loading apps …') }}
 		</div>
 		<div v-else>
 			<div v-for="app in recommendedApps" :key="app.id" class="app">
-				<img v-if="app.screenshot" :src="app.screenshot" :alt="t('core', 'screenshot of Nextcloud app {app}', { app: app.name })">
-				<div v-else class="no-screenshot" />
+				<img :src="customIcon(app.id)" :alt="t('core', 'Nextcloud app {app}', { app: app.name })">
 				<div class="info">
-					<h2>{{ app.name }}
+					<h3>
+						{{ app.name }}
 						<span v-if="app.loading" class="icon icon-loading-small" />
 						<span v-else-if="app.active" class="icon icon-checkmark-white" />
-					</h2>
-					<p>{{ app.summary }}</p>
-					<p v-if="!app.canInstall" class="error">{{ t('core', 'Can\'t install this app') }}</p>
+					</h3>
+					<p v-html="customDescription(app.id)">
+					</p>
+					<p v-if="!app.canInstall" class="error">
+						{{ t('core', 'Can\'t install this app') }}
+					</p>
 				</div>
 			</div>
 		</div>
@@ -44,17 +47,30 @@
 
 <script>
 import axios from '@nextcloud/axios'
-import { generateUrl } from '@nextcloud/router'
+import { generateUrl, imagePath } from '@nextcloud/router'
 import pLimit from 'p-limit'
+import { translate as t } from '@nextcloud/l10n'
 
 import logger from '../../logger'
 
-const recommended = [
-	'contacts',
-	'calendar',
-	'mail',
-	'photos'
-]
+const recommended = {
+	calendar: {
+		description: t('core', 'Schedule work & meetings, synced with all your devices.'),
+		icon: imagePath('core', 'places/calendar.svg')
+	},
+	contacts: {
+		description: t('core', 'Keep your colleagues and friends in one place without leaking their private info.'),
+		icon: imagePath('core', 'places/contacts.svg')
+	},
+	mail: {
+		description: t('core', 'Simple email app nicely integrated with Files, Contacts and Calendar.'),
+		icon: imagePath('core', 'actions/mail.svg')
+	},
+	talk: {
+		description: t('core', 'Screensharing, online meetings and web conferencing – on desktop and with mobile apps.')
+	}
+}
+const recommendedIds = Object.keys(recommended)
 
 export default {
 	name: 'RecommendedApps',
@@ -66,7 +82,7 @@ export default {
 	},
 	computed: {
 		recommendedApps() {
-			return this.apps.filter(app => recommended.includes(app.id))
+			return this.apps.filter(app => recommendedIds.includes(app.id))
 		}
 	},
 	mounted() {
@@ -101,6 +117,20 @@ export default {
 			Promise.all(installing)
 				.then(() => logger.info('all recommended apps installed'))
 				.catch(error => logger.error('could not install recommended apps', { error }))
+		},
+		customIcon(appId) {
+			if (!(appId in recommended)) {
+				logger.warn(`no app icon for recommended app ${appId}`)
+				return imagePath('core', 'places/default-app-icon.svg')
+			}
+			return recommended[appId].icon
+		},
+		customDescription(appId) {
+			if (!(appId in recommended)) {
+				logger.warn(`no app description for recommended app ${appId}`)
+				return ''
+			}
+			return recommended[appId].description
 		}
 	}
 }
@@ -114,20 +144,21 @@ div.loading {
 	display: flex;
 	flex-direction: row;
 
-	img, .no-screenshot {
-		width: 130px;
+	img {
+		height: 64px;
+		width: 64px;
 	}
 
-	img, .no-screenshot, .info {
+	img, .info {
 		padding: 12px;
 	}
 
 	.info {
-		h2 {
+		h3 {
 			text-align: left;
 		}
 
-		h2 > span.icon {
+		h3 > span.icon {
 			display: inline-block;
 		}
 	}
