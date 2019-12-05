@@ -41,9 +41,9 @@ class ManuallyLockedException extends LockedException {
 	/**
 	 * owner of the lock
 	 *
-	 * @var string
+	 * @var string|null
 	 */
-	private $owner = '';
+	private $owner = null;
 
 	/**
 	 * estimated timeout for the lock
@@ -60,12 +60,12 @@ class ManuallyLockedException extends LockedException {
 	 * @param string $path locked path
 	 * @param \Exception|null $previous previous exception for cascading
 	 * @param string $existingLock
-	 * @param string $owner
+	 * @param string|null $owner
 	 * @param int $timeout
 	 *
 	 * @since 18.0.0
 	 */
-	public function __construct(string $path, \Exception $previous = null, string $existingLock = null, string $owner = '', int $timeout = -1) {
+	public function __construct(string $path, \Exception $previous = null, string $existingLock = null, $owner = null, int $timeout = -1) {
 		parent::__construct($path, $previous, $existingLock);
 		$this->owner = $owner;
 		$this->timeout = $timeout;
@@ -81,10 +81,10 @@ class ManuallyLockedException extends LockedException {
 	}
 
 	/**
-	 * @return string
+	 * @return string|null
 	 * @since 18.0.0
 	 */
-	public function getOwner(): string {
+	public function getOwner() {
 		return $this->owner;
 	}
 
