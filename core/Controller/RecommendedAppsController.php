@@ -27,14 +27,26 @@ use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\ContentSecurityPolicy;
 use OCP\AppFramework\Http\Response;
 use OCP\AppFramework\Http\StandaloneTemplateResponse;
+use OCP\IInitialStateService;
+use OCP\IRequest;
 
 class RecommendedAppsController extends Controller {
+
+	/** @var IInitialStateService */
+	private $initialStateService;
+
+	public function __construct(IRequest $request,
+								IInitialStateService $initialStateService) {
+		parent::__construct('core', $request);
+		$this->initialStateService = $initialStateService;
+	}
 
 	/**
 	 * @NoCSRFRequired
 	 * @return Response
 	 */
 	public function index(): Response {
+		$this->initialStateService->provideInitialState('core', 'defaultPageUrl', \OC_Util::getDefaultPageUrl());
 		$response = new StandaloneTemplateResponse($this->appName, 'recommendedapps', [], 'guest');
 		$csp = new ContentSecurityPolicy();
 		$csp->addAllowedImageDomain('https://usercontent.apps.nextcloud.com');

@@ -120,7 +120,7 @@ class SetupController {
 
 		if ($installRecommended) {
 			$urlGenerator = \OC::$server->getURLGenerator();
-			$location = $urlGenerator->getAbsoluteURL('/index.php/settings/apps/recommended?download&returnTo=' . urlencode(\OC_Util::getDefaultPageUrl()));
+			$location = $urlGenerator->getAbsoluteURL('index.php/core/apps/recommended');
 			header('Location: ' . $location);
 			exit();
 		}

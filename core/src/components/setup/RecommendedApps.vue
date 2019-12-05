@@ -38,7 +38,10 @@
 				</h3>
 				<p v-html="customDescription(app.id)">
 				</p>
-				<p v-if="!app.canInstall" class="error">
+				<p v-if="!app.isCompatible" class="error">
+					{{ t('core', 'Can\'t install this app because it is not compatible') }}
+				</p>
+				<p v-else-if="!app.canInstall" class="error">
 					{{ t('core', 'Can\'t install this app') }}
 				</p>
 			</div>
@@ -49,6 +52,7 @@
 <script>
 import axios from '@nextcloud/axios'
 import { generateUrl, imagePath } from '@nextcloud/router'
+import { loadState } from '@nextcloud/initial-state'
 import pLimit from 'p-limit'
 import { translate as t } from '@nextcloud/l10n'
 
@@ -72,6 +76,7 @@ const recommended = {
 	}
 }
 const recommendedIds = Object.keys(recommended)
+const defaultPageUrl = loadState('core', 'defaultPageUrl')
 
 export default {
 	name: 'RecommendedApps',
@@ -106,17 +111,21 @@ export default {
 		installApps() {
 			const limit = pLimit(1)
 			const installing = this.recommendedApps
-				.filter(app => !app.active && app.canInstall)
+				.filter(app => !app.active && app.isCompatible && app.canInstall)
 				.map(app => limit(() => {
 					app.loading = true
 					axios.post(generateUrl(`settings/apps/enable`), { appIds: [app.id], groups: [] })
 						.then(() => {
-							// app.loading = false
+							app.loading = false
 						})
 				}))
 			logger.debug(`installing ${installing.length} recommended apps`)
 			Promise.all(installing)
-				.then(() => logger.info('all recommended apps installed'))
+				.then(() => {
+					logger.info('all recommended apps installed, redirecting …')
+
+					window.location = defaultPageUrl
+				})
 				.catch(error => logger.error('could not install recommended apps', { error }))
 		},
 		customIcon(appId) {
