@@ -25,8 +25,11 @@
 		<p v-if="loadingApps" class="loading">
 			{{ t('core', 'Loading apps …') }}
 		</p>
+		<p v-else-if="loadingAppsError" class="loading-error">
+			{{ t('core', 'Could not fetch list of apps from the app store.') }}
+		</p>
 		<p v-else>
-			{{ t('core', 'Installing recommended apps …' )}}
+			{{ t('core', 'Installing recommended apps …') }}
 		</p>
 		<div v-for="app in recommendedApps" :key="app.id" class="app">
 			<img :src="customIcon(app.id)" :alt="t('core', 'Nextcloud app {app}', { app: app.name })">
@@ -36,9 +39,11 @@
 					<span v-if="app.loading" class="icon icon-loading-small" />
 					<span v-else-if="app.active" class="icon icon-checkmark-white" />
 				</h3>
-				<p v-html="customDescription(app.id)">
+				<p v-html="customDescription(app.id)" />
+				<p v-if="app.installationError" class="error">
+					{{ t('core', 'App download or installation failed') }}
 				</p>
-				<p v-if="!app.isCompatible" class="error">
+				<p v-else-if="!app.isCompatible" class="error">
 					{{ t('core', 'Can\'t install this app because it is not compatible') }}
 				</p>
 				<p v-else-if="!app.canInstall" class="error">
@@ -46,6 +51,7 @@
 				</p>
 			</div>
 		</div>
+		<a :href="defaultPageUrl">{{ t('core', 'Go back') }}</a>
 	</div>
 </template>
 
@@ -83,7 +89,9 @@ export default {
 	data() {
 		return {
 			loadingApps: true,
-			apps: []
+			loadingAppsError: false,
+			apps: [],
+			defaultPageUrl
 		}
 	},
 	computed: {
@@ -97,14 +105,18 @@ export default {
 			.then(data => {
 				logger.info(`${data.apps.length} apps fetched`)
 
-				this.apps = data.apps.map(app => Object.assign(app, { loading: false }))
-				this.loadingApps = false
+				this.apps = data.apps.map(app => Object.assign(app, { loading: false, installationError: false }))
 				logger.debug(`${this.recommendedApps.length} recommended apps found`, { apps: this.recommendedApps })
 
 				this.installApps()
 			})
 			.catch(error => {
 				logger.error('could not fetch app list', { error })
+
+				this.loadingAppsError = true
+			})
+			.then(() => {
+				this.loadingApps = false
 			})
 	},
 	methods: {
@@ -115,6 +127,10 @@ export default {
 				.map(app => limit(() => {
 					app.loading = true
 					axios.post(generateUrl(`settings/apps/enable`), { appIds: [app.id], groups: [] })
+						.catch(error => {
+							logger.error(`could not install ${app.id}`, { error })
+							app.installationError = true
+						})
 						.then(() => {
 							app.loading = false
 						})
@@ -147,7 +163,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-p.loading {
+p.loading, p.loading-error {
 	height: 100px;
 }
 .app {
