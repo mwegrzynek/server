@@ -84,7 +84,7 @@ class ManuallyLockedException extends LockedException {
 	 * @return string|null
 	 * @since 18.0.0
 	 */
-	public function getOwner() {
+	public function getOwner(): ?string {
 		return $this->owner;
 	}
 
