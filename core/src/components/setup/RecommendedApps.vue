@@ -22,24 +22,25 @@
 <template>
 	<div class="update">
 		<h2>{{ t('core', 'Recommended apps') }}</h2>
-		<div v-if="loadingApps" class="loading">
+		<p v-if="loadingApps" class="loading">
 			{{ t('core', 'Loading apps …') }}
-		</div>
-		<div v-else>
-			<div v-for="app in recommendedApps" :key="app.id" class="app">
-				<img :src="customIcon(app.id)" :alt="t('core', 'Nextcloud app {app}', { app: app.name })">
-				<div class="info">
-					<h3>
-						{{ app.name }}
-						<span v-if="app.loading" class="icon icon-loading-small" />
-						<span v-else-if="app.active" class="icon icon-checkmark-white" />
-					</h3>
-					<p v-html="customDescription(app.id)">
-					</p>
-					<p v-if="!app.canInstall" class="error">
-						{{ t('core', 'Can\'t install this app') }}
-					</p>
-				</div>
+		</p>
+		<p v-else>
+			{{ t('core', 'Installing recommended apps …' )}}
+		</p>
+		<div v-for="app in recommendedApps" :key="app.id" class="app">
+			<img :src="customIcon(app.id)" :alt="t('core', 'Nextcloud app {app}', { app: app.name })">
+			<div class="info">
+				<h3>
+					{{ app.name }}
+					<span v-if="app.loading" class="icon icon-loading-small" />
+					<span v-else-if="app.active" class="icon icon-checkmark-white" />
+				</h3>
+				<p v-html="customDescription(app.id)">
+				</p>
+				<p v-if="!app.canInstall" class="error">
+					{{ t('core', 'Can\'t install this app') }}
+				</p>
 			</div>
 		</div>
 	</div>
@@ -137,7 +138,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-div.loading {
+p.loading {
 	height: 100px;
 }
 .app {
