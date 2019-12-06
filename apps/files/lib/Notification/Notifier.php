@@ -122,7 +122,7 @@ class Notifier implements INotifier {
 		$notification->addParsedAction($approveAction)
 			->addParsedAction($disapproveAction)
 			->setRichSubject(
-				$l->t('Incoming file transfer from {user}'),
+				$l->t('Incoming ownership transfer from {user}'),
 				[
 					'user' => [
 						'type' => 'user',
@@ -130,7 +130,7 @@ class Notifier implements INotifier {
 						'name' => $param['sourceUser'],
 					],
 				])
-			->setParsedSubject(str_replace('{user}', $param['sourceUser'], $l->t('Incoming file transfer from {user}')))
+			->setParsedSubject(str_replace('{user}', $param['sourceUser'], $l->t('Incoming ownership transfer from {user}')))
 			->setRichMessage(
 				$l->t('Do you want to accept {path}?'),
 				[
@@ -149,11 +149,11 @@ class Notifier implements INotifier {
 		$l = $this->l10nFactory->get('files', $languageCode);
 		$param = $notification->getSubjectParameters();
 
-		$notification->setRichSubject($l->t('File transfer failed'))
-			->setParsedSubject($l->t('File transfer failed'))
+		$notification->setRichSubject($l->t('Ownership transfer failed'))
+			->setParsedSubject($l->t('Ownership transfer failed'))
 
 			->setRichMessage(
-				$l->t('Your transfer of {path} to {user} failed.'),
+				$l->t('Your ownership transfer of {path} to {user} failed.'),
 				[
 					'path' => [
 						'type' => 'highlight',
@@ -166,7 +166,7 @@ class Notifier implements INotifier {
 						'name' => $param['targetUser'],
 					],
 				])
-			->setParsedMessage(str_replace(['{path}', '{user}'], [$param['nodeName'], $param['targetUser']], $l->t('Your transfer of {path} to {user} failed.')));
+			->setParsedMessage(str_replace(['{path}', '{user}'], [$param['nodeName'], $param['targetUser']], $l->t('Your ownership transfer of {path} to {user} failed.')));
 		return $notification;
 	}
 
@@ -174,11 +174,11 @@ class Notifier implements INotifier {
 		$l = $this->l10nFactory->get('files', $languageCode);
 		$param = $notification->getSubjectParameters();
 
-		$notification->setRichSubject($l->t('File transfer failed'))
-			->setParsedSubject($l->t('File transfer failed'))
+		$notification->setRichSubject($l->t('Ownership transfer failed'))
+			->setParsedSubject($l->t('Ownership transfer failed'))
 
 			->setRichMessage(
-				$l->t('The transfer of {path} from {user} failed.'),
+				$l->t('The ownership transfer of {path} from {user} failed.'),
 				[
 					'path' => [
 						'type' => 'highlight',
@@ -191,7 +191,7 @@ class Notifier implements INotifier {
 						'name' => $param['sourceUser'],
 					],
 				])
-			->setParsedMessage(str_replace(['{path}', '{user}'], [$param['nodeName'], $param['sourceUser']], $l->t('The transfer of {path} from {user} failed.')));
+			->setParsedMessage(str_replace(['{path}', '{user}'], [$param['nodeName'], $param['sourceUser']], $l->t('The ownership transfer of {path} from {user} failed.')));
 
 		return $notification;
 	}
@@ -200,11 +200,11 @@ class Notifier implements INotifier {
 		$l = $this->l10nFactory->get('files', $languageCode);
 		$param = $notification->getSubjectParameters();
 
-		$notification->setRichSubject($l->t('File transfer done'))
-			->setParsedSubject($l->t('File transfer done'))
+		$notification->setRichSubject($l->t('Ownership transfer done'))
+			->setParsedSubject($l->t('Ownership transfer done'))
 
 			->setRichMessage(
-				$l->t('Your transfer of {path} to {user} has completed.'),
+				$l->t('Your ownership transfer of {path} to {user} has completed.'),
 				[
 					'path' => [
 						'type' => 'highlight',
@@ -217,7 +217,7 @@ class Notifier implements INotifier {
 						'name' => $param['targetUser'],
 					],
 				])
-			->setParsedMessage(str_replace(['{path}', '{user}'], [$param['nodeName'], $param['targetUser']], $l->t('Your transfer of {path} to {user} has completed.')));
+			->setParsedMessage(str_replace(['{path}', '{user}'], [$param['nodeName'], $param['targetUser']], $l->t('Your ownership transfer of {path} to {user} has completed.')));
 
 		return $notification;
 	}
@@ -226,11 +226,11 @@ class Notifier implements INotifier {
 		$l = $this->l10nFactory->get('files', $languageCode);
 		$param = $notification->getSubjectParameters();
 
-		$notification->setRichSubject($l->t('File transfer done'))
-			->setParsedSubject($l->t('File transfer done'))
+		$notification->setRichSubject($l->t('Ownership transfer done'))
+			->setParsedSubject($l->t('Ownership transfer done'))
 
 			->setRichMessage(
-				$l->t('The transfer of {path} from {user} has completed.'),
+				$l->t('The ownership transfer of {path} from {user} has completed.'),
 				[
 					'path' => [
 						'type' => 'highlight',
@@ -243,7 +243,7 @@ class Notifier implements INotifier {
 						'name' => $param['sourceUser'],
 					],
 				])
-			->setParsedMessage(str_replace(['{path}', '{user}'], [$param['nodeName'], $param['sourceUser']], $l->t('The transfer of {path} from {user} has completed.')));
+			->setParsedMessage(str_replace(['{path}', '{user}'], [$param['nodeName'], $param['sourceUser']], $l->t('The ownership transfer of {path} from {user} has completed.')));
 
 		return $notification;
 	}
