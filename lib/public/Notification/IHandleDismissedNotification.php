@@ -33,5 +33,9 @@ namespace OCP\Notification;
  */
 interface IHandleDismissedNotification {
 
+	/**
+	 * @param INotification $notification
+	 * @throws \InvalidArgumentException In case the handler can't handle the notification
+	 */
 	public function dismissNotification(INotification $notification): void;
 }

@@ -85,4 +85,10 @@ interface IManager extends IApp, INotifier {
 	 * @since 14.0.0
 	 */
 	public function isPreparingPushNotification(): bool;
+
+	/**
+	 * @return void
+	 * @since 18.0.0
+	 */
+	public function dismissNotification(INotification $notification): void;
 }
