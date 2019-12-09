@@ -44,15 +44,16 @@
 					</div>
 					<Multiselect
 						:options="formatedUserSuggestions"
-						trackBy="user"
 						:multiple="false"
 						:searchable="true"
 						:placeholder="t('core', 'Target user …')"
 						:preselect-first="true"
 						:preserve-search="true"
-						@search-change="findUserDebounced"
+						track-by="user"
+						label="displayName"
 						:clear-on-select="false"
-						:user-select="true" />
+						:user-select="true"
+						@search-change="findUserDebounced" />
 				</li>
 				<li>
 					<input type="submit"
@@ -93,7 +94,7 @@ export default {
 			directory: undefined,
 			directoryPickerError: undefined,
 			submitError: undefined,
-			uid: '',
+			uid: null,
 			userSuggestions: {}
 		}
 	},
