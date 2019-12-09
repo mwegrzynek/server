@@ -43,6 +43,7 @@
 						{{ t('files', 'Target user') }}
 					</div>
 					<Multiselect
+						v-model="selectedUser"
 						:options="formatedUserSuggestions"
 						:multiple="false"
 						:searchable="true"
@@ -94,13 +95,13 @@ export default {
 			directory: undefined,
 			directoryPickerError: undefined,
 			submitError: undefined,
-			uid: null,
+			selectedUser: null,
 			userSuggestions: {}
 		}
 	},
 	computed: {
 		canSubmit() {
-			return !!this.directory && !!this.uid
+			return !!this.directory && !!this.selectedUser
 		},
 		formatedUserSuggestions() {
 			return Object.keys(this.userSuggestions).map((uid) => {
@@ -172,7 +173,7 @@ export default {
 			this.submitError = undefined
 			const data = {
 				path: this.directory,
-				recipient: this.uid
+				recipient: this.selectedUser.user
 			}
 			logger.debug('submit transfer ownership form', data)
 
@@ -184,7 +185,7 @@ export default {
 					logger.info('Transfer ownership request sent', { data })
 
 					this.directory = undefined
-					this.recipient = undefined
+					this.selectedUser = null
 					OCP.Toast.success(t('files', 'Ownership transfer request sent'))
 				})
 				.catch(error => {
