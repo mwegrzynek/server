@@ -132,7 +132,7 @@ class Notifier implements INotifier {
 				])
 			->setParsedSubject(str_replace('{user}', $param['sourceUser'], $l->t('Incoming ownership transfer from {user}')))
 			->setRichMessage(
-				$l->t('Do you want to accept {path}?'),
+				$l->t('Do you want to accept {path}? Note: The transfer process after accepting may take up to 1 hour.'),
 				[
 					'path' => [
 						'type' => 'highlight',
@@ -140,7 +140,7 @@ class Notifier implements INotifier {
 						'name' => $param['nodeName'],
 					]
 				])
-			->setParsedMessage(str_replace('{path}', $param['nodeName'], $l->t('Do you want to accept {path}?')));
+			->setParsedMessage(str_replace('{path}', $param['nodeName'], $l->t('Do you want to accept {path}? Note: The transfer process after accepting may take up to 1 hour.')));
 
 		return $notification;
 	}
