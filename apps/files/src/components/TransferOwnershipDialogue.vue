@@ -42,7 +42,17 @@
 					<div class="step-header">
 						{{ t('files', 'Target user') }}
 					</div>
-					<input id="files-transfer-user" v-model="uid" type="text">
+					<Multiselect
+						:options="formatedUserSuggestions"
+						trackBy="user"
+						:multiple="false"
+						:searchable="true"
+						:placeholder="t('core', 'Target user …')"
+						:preselect-first="true"
+						:preserve-search="true"
+						@search-change="findUserDebounced"
+						:clear-on-select="false"
+						:user-select="true" />
 				</li>
 				<li>
 					<input type="submit"
@@ -58,8 +68,11 @@
 
 <script>
 import axios from '@nextcloud/axios'
+import debounce from 'debounce'
 import { generateOcsUrl } from '@nextcloud/router'
 import { getFilePickerBuilder } from '@nextcloud/dialogs'
+import { Multiselect } from 'nextcloud-vue/dist/Components/Multiselect'
+import Vue from 'vue'
 
 import logger from '../logger'
 
@@ -72,18 +85,35 @@ const picker = getFilePickerBuilder(t('files', 'Select directory to transfer'))
 
 export default {
 	name: 'TransferOwnershipDialogue',
+	components: {
+		Multiselect
+	},
 	data() {
 		return {
 			directory: undefined,
 			directoryPickerError: undefined,
 			submitError: undefined,
-			uid: ''
+			uid: '',
+			userSuggestions: {}
 		}
 	},
 	computed: {
 		canSubmit() {
 			return !!this.directory && !!this.uid
+		},
+		formatedUserSuggestions() {
+			return Object.keys(this.userSuggestions).map((uid) => {
+				const user = this.userSuggestions[uid]
+				return {
+					user: user.uid,
+					displayName: user.displayName,
+					icon: 'icon-user'
+				}
+			})
 		}
+	},
+	created() {
+		this.findUserDebounced = debounce(this.findUser, 300)
 	},
 	methods: {
 		start() {
@@ -104,6 +134,34 @@ export default {
 
 					this.directoryPickerError = error.message || t('files', 'Unknown error')
 				})
+		},
+		async findUser(query) {
+			this.query = query.trim()
+
+			if (query.length < 3) {
+				return
+			}
+
+			const response = await axios.get(generateOcsUrl('apps/files_sharing/api/v1') + 'sharees', {
+				params: {
+					format: 'json',
+					itemType: 'file',
+					search: query,
+					perPage: 20,
+					lookup: false
+				}
+			})
+
+			if (response.data.ocs.meta.statuscode !== 100) {
+				logger.error('Error fetching suggestions', { response })
+			}
+
+			response.data.ocs.data.users.forEach(user => {
+				Vue.set(this.userSuggestions, user.value.shareWith, {
+					uid: user.value.shareWith,
+					displayName: user.label
+				})
+			})
 		},
 		submit() {
 			if (!this.canSubmit) {
