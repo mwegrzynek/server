@@ -31,7 +31,7 @@ namespace OCP\Notification;
  * This can be useful if dismissing the notification will leave it in an incomplete
  * state. The handler can chose to for example do some default action.
  */
-interface IDismissableNotifier {
+interface IDismissableNotifier extends INotifier {
 
 	/**
 	 * @param INotification $notification
